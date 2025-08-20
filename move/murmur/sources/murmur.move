@@ -201,23 +201,6 @@ module murmur::murmur {
         ticket_id
     }
 
-    /// 智能圈子分配和NFT发放（Web2服务调用）
-    public fun smart_circle_assignment(
-        admin_cap: &mut AdminCap,
-        user_keywords: vector<vector<u8>>,
-        user: address,
-        ctx: &mut tx_context::TxContext
-    ): (address, address) {
-        // 验证超管权限
-        assert!(admin_cap.admin == tx_context::sender(ctx), EUnauthorized);
-        
-        // 这里Web2服务会通过事件监听器获取所有圈子信息
-        // 然后调用相应的函数来创建圈子或发放NFT
-        
-        // 临时返回空值，实际实现由Web2服务处理
-        (@0x0, @0x0)
-    }
-
     /// 发布吐槽到指定圈子（需要持有对应的访问门票）
     public fun publish_murmur(
         circle_id: address,
@@ -266,30 +249,6 @@ module murmur::murmur {
         transfer::share_object(murmur);
         murmur_id
     }
-
-    /// 获取圈子的基本信息
-    public fun get_circle_info(circle: &MurmurCircle): (string::String, string::String, u64, u64, bool, u64) {
-        (
-            circle.name,
-            circle.description,
-            circle.murmur_count,
-            circle.created_at,
-            circle.is_active,
-            circle.total_members
-        )
-    }
-
-    /// 获取吐槽的基本信息
-    public fun get_murmur_info(murmur: &Murmur): (string::String, u64, address, u64, u64) {
-        (
-            murmur.content,
-            murmur.created_at,
-            murmur.author,
-            murmur.likes,
-            murmur.dislikes
-        )
-    }
-
     /// 点赞吐槽
     public fun like_murmur(murmur: &mut Murmur) {
         murmur.likes = murmur.likes + 1;
@@ -325,52 +284,11 @@ module murmur::murmur {
         });
     }
 
-
-
-    /// 获取圈子的完整信息（供Web2服务使用）
-    public fun get_circle_full_info(circle: &MurmurCircle): (
-        address, string::String, string::String, u64, address, u64, bool, u64
-    ) {
-        (
-            object::uid_to_address(&circle.id),
-            circle.name,
-            circle.description,
-            circle.created_at,
-            circle.creator,
-            circle.murmur_count,
-            circle.is_active,
-            circle.total_members
-        )
-    }
-
-    /// 获取吐槽的完整信息（供Web2服务使用）
-    public fun get_murmur_full_info(murmur: &Murmur): (
-        address, address, string::String, u64, address, u64, u64
-    ) {
-        (
-            object::uid_to_address(&murmur.id),
-            murmur.circle_id,
-            murmur.content,
-            murmur.created_at,
-            murmur.author,
-            murmur.likes,
-            murmur.dislikes
-        )
-    }
-
     /// 检查用户是否有权限访问圈子
     public fun has_circle_access(user: address, circle_id: address, access_ticket: &MurmurCircleTicket): bool {
         access_ticket.owner == user && access_ticket.circle_id == circle_id
     }
 
-
-
-    /// 获取用户的圈子访问NFT列表（供Web2服务使用）
-    public fun get_user_circle_access_nfts(user: address): vector<address> {
-        // 这里应该返回用户拥有的所有圈子访问NFT的ID
-        // 由于Move的限制，实际实现需要Web2服务通过事件监听器来维护
-        vector::empty<address>()
-    }
 }
 
 
