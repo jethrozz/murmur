@@ -1,6 +1,32 @@
 [package]
 name = "murmur-server"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [dependencies]
+# Sui SDK
+sui-sdk = "1.0"
+sui-types = "1.0"
+
+# Web框架
+axum = "0.7"
+tokio = { version = "1.0", features = ["full"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors"] }
+
+# 数据库
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "mysql", "chrono", "uuid"] }
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+# 序列化
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# 日志
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# 配置
+config = "0.14"
+anyhow = "1.0"
