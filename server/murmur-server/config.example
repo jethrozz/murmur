@@ -1,0 +1,15 @@
+# Murmur Indexer 环境变量配置示例
+# 复制此文件为 .env 并填入实际值
+
+# Sui合约包ID（必须设置）
+SUI_PACKAGE_ID=0x你的murmur合约包ID
+
+# Sui RPC URL（可选，默认为主网）
+SUI_RPC_URL=https://fullnode.mainnet.sui.io:443
+
+# 数据库URL（可选，默认为本地MySQL）
+DATABASE_URL=mysql://username:password@localhost:3306/murmur_db
+
+# 服务器配置（可选）
+SERVER_HOST=0.0.0.0
+SERVER_PORT=3000
