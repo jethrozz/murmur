@@ -1,270 +1,246 @@
-// API服务层 - 用于后期对接后端接口
+import { 
+  ApiResponse, 
+  Circle, 
+  Murmur, 
+  Comment, 
+  SearchCircleRequest, 
+  JoinCircleRequest, 
+  CreateMurmurRequest, 
+  CreateCommentRequest, 
+  ReactionRequest 
+} from '../types';
 
-export interface Circle {
-  id: string;
-  name: string;
-  description: string;
-  created_at: number;
-  creator: string;
-  murmur_count: number;
-  is_active: boolean;
-  total_members: number;
-}
+// 配置API基础URL - 这里预留接口对接位置
+// const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
-export interface Murmur {
-  id: string;
-  circle_id: string;
-  content: string;
-  created_at: number;
-  author: string;
-  likes: number;
-  dislikes: number;
-}
+// 通用请求函数 - 预留用于真实API对接
+// const request = async <T>(
+//   endpoint: string, 
+//   options: RequestInit = {}
+// ): Promise<ApiResponse<T>> => {
+//   try {
+//     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+//       headers: {
+//         'Content-Type': 'application/json',
+//         ...options.headers,
+//       },
+//       ...options,
+//     });
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  message?: string;
-}
+//     if (!response.ok) {
+//       throw new Error(`HTTP error! status: ${response.status}`);
+//     }
 
-export interface CirclesResponse {
-  circles: Circle[];
-  total: number;
-  limit: number;
-  offset: number;
-}
+//     const data = await response.json();
+//     return data;
+//   } catch (error) {
+//     console.error('API request failed:', error);
+//     return {
+//       success: false,
+//       error: error instanceof Error ? error.message : 'Unknown error'
+//     };
+//   }
+// };
 
-export interface MurmursResponse {
-  murmurs: Murmur[];
-  total: number;
-  limit: number;
-  offset: number;
-}
-
-// 模拟数据
-const mockCircles: Circle[] = [
-  {
-    id: '1',
-    name: '程序员吐槽大会',
-    description: '程序员们的日常吐槽，代码bug、产品需求、加班生活...',
-    created_at: Math.floor(Date.now() / 1000) - 86400 * 7,
-    creator: '0x123...abc',
-    murmur_count: 156,
-    is_active: true,
-    total_members: 89
-  },
-  {
-    id: '2',
-    name: '学生党日常',
-    description: '学生们的学习生活吐槽，考试、作业、宿舍生活...',
-    created_at: Math.floor(Date.now() / 1000) - 86400 * 5,
-    creator: '0x456...def',
-    murmur_count: 89,
-    is_active: true,
-    total_members: 45
-  },
-  {
-    id: '3',
-    name: '职场新人',
-    description: '职场新人的成长烦恼，工作压力、人际关系、职业规划...',
-    created_at: Math.floor(Date.now() / 1000) - 86400 * 3,
-    creator: '0x789...ghi',
-    murmur_count: 67,
-    is_active: true,
-    total_members: 32
-  }
-];
-
-const mockMurmurs: Murmur[] = [
-  {
-    id: '1',
-    circle_id: '1',
-    content: '今天又遇到了一个神奇的bug，明明昨天还能跑，今天就报错了...',
-    created_at: Math.floor(Date.now() / 1000) - 3600 * 2,
-    author: '0xabc...123',
-    likes: 12,
-    dislikes: 1
-  },
-  {
-    id: '2',
-    circle_id: '1',
-    content: '产品经理又改需求了，这已经是这周第三次了...',
-    created_at: Math.floor(Date.now() / 1000) - 3600 * 4,
-    author: '0xdef...456',
-    likes: 8,
-    dislikes: 0
-  }
-];
-
-// API服务类
-export class ApiService {
-  private baseUrl: string;
-
-  constructor(baseUrl: string = '') {
-    this.baseUrl = baseUrl;
-  }
-
+// 圈子相关API
+export const circleApi = {
   // 获取用户已加入的圈子
-  async getUserCircles(): Promise<ApiResponse<CirclesResponse>> {
-    // TODO: 后期对接真实API
-    // const response = await fetch(`${this.baseUrl}/api/user/circles`);
-    // return response.json();
+  getJoinedCircles: async (): Promise<ApiResponse<Circle[]>> => {
+    // TODO: 对接真实接口
+    // return request<Circle[]>('/circles/joined');
     
-    // 模拟API调用
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          success: true,
-          data: {
-            circles: mockCircles,
-            total: mockCircles.length,
-            limit: 20,
-            offset: 0
-          }
-        });
-      }, 500);
-    });
-  }
+    // 临时使用模拟数据
+    const { getJoinedCircles } = await import('../data/mockData');
+    return {
+      success: true,
+      data: getJoinedCircles()
+    };
+  },
 
   // 搜索圈子
-  async searchCircles(keyword: string): Promise<ApiResponse<CirclesResponse>> {
-    // TODO: 后期对接真实API
-    // const response = await fetch(`${this.baseUrl}/api/circles/search?name=${encodeURIComponent(keyword)}`);
-    // return response.json();
-    
-    // 模拟API调用
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const filteredCircles = mockCircles.filter(circle => 
-          circle.name.toLowerCase().includes(keyword.toLowerCase()) ||
-          circle.description.toLowerCase().includes(keyword.toLowerCase())
-        );
-        
-        resolve({
-          success: true,
-          data: {
-            circles: filteredCircles,
-            total: filteredCircles.length,
-            limit: 20,
-            offset: 0
-          }
-        });
-      }, 300);
-    });
-  }
-
-  // 创建圈子
-  async createCircle(name: string, description: string): Promise<ApiResponse<Circle>> {
-    // TODO: 后期对接真实API和智能合约
-    // const response = await fetch(`${this.baseUrl}/api/circles`, {
+  searchCircles: async (request: SearchCircleRequest): Promise<ApiResponse<Circle[]>> => {
+    // TODO: 对接真实接口
+    // return request<Circle[]>('/circles/search', {
     //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ name, description })
+    //   body: JSON.stringify(request)
     // });
-    // return response.json();
     
-    // 模拟API调用
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const newCircle: Circle = {
-          id: Date.now().toString(),
-          name,
-          description,
-          created_at: Math.floor(Date.now() / 1000),
-          creator: '0xcurrent...user',
-          murmur_count: 0,
-          is_active: true,
-          total_members: 1
-        };
-        
-        resolve({
-          success: true,
-          data: newCircle
-        });
-      }, 1000);
-    });
-  }
+    // 临时使用模拟数据
+    const { searchCircles } = await import('../data/mockData');
+    return {
+      success: true,
+      data: searchCircles(request.query)
+    };
+  },
+
+  // 加入圈子
+  joinCircle: async (request: JoinCircleRequest): Promise<ApiResponse<Circle>> => {
+    // TODO: 对接真实接口
+    // return request<Circle>('/circles/join', {
+    //   method: 'POST',
+    //   body: JSON.stringify(request)
+    // });
+    
+    // 临时使用模拟数据
+    const { getCircleById } = await import('../data/mockData');
+    const circle = getCircleById(request.circleId);
+    if (circle) {
+      circle.isJoined = true;
+      circle.memberCount += 1;
+    }
+    return {
+      success: true,
+      data: circle
+    };
+  },
 
   // 获取圈子详情
-  async getCircleById(id: string): Promise<ApiResponse<Circle>> {
-    // TODO: 后期对接真实API
-    // const response = await fetch(`${this.baseUrl}/api/circles/${id}`);
-    // return response.json();
+  getCircleById: async (id: string): Promise<ApiResponse<Circle>> => {
+    // TODO: 对接真实接口
+    // return request<Circle>(`/circles/${id}`);
     
-    // 模拟API调用
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const circle = mockCircles.find(c => c.id === id);
-        if (circle) {
-          resolve({
-            success: true,
-            data: circle
-          });
-        } else {
-          resolve({
-            success: false,
-            message: '圈子不存在'
-          });
-        }
-      }, 300);
-    });
+    // 临时使用模拟数据
+    const { getCircleById } = await import('../data/mockData');
+    const circle = getCircleById(id);
+    return {
+      success: true,
+      data: circle
+    };
   }
+};
 
+// 吐槽相关API
+export const murmurApi = {
   // 获取圈子的吐槽列表
-  async getCircleMurmurs(circleId: string, limit: number = 20, offset: number = 0): Promise<ApiResponse<MurmursResponse>> {
-    // TODO: 后期对接真实API
-    // const response = await fetch(`${this.baseUrl}/api/circles/${circleId}/murmurs?limit=${limit}&offset=${offset}`);
-    // return response.json();
+  getMurmursByCircleId: async (circleId: string): Promise<ApiResponse<Murmur[]>> => {
+    // TODO: 对接真实接口
+    // return request<Murmur[]>(`/circles/${circleId}/murmurs`);
     
-    // 模拟API调用
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const circleMurmurs = mockMurmurs.filter(murmur => murmur.circle_id === circleId);
-        
-        resolve({
-          success: true,
-          data: {
-            murmurs: circleMurmurs,
-            total: circleMurmurs.length,
-            limit,
-            offset
-          }
-        });
-      }, 300);
-    });
-  }
+    // 临时使用模拟数据
+    const { getMurmursByCircleId } = await import('../data/mockData');
+    return {
+      success: true,
+      data: getMurmursByCircleId(circleId)
+    };
+  },
 
   // 发布吐槽
-  async publishMurmur(circleId: string, content: string): Promise<ApiResponse<Murmur>> {
-    // TODO: 后期对接真实API和智能合约
-    // const response = await fetch(`${this.baseUrl}/api/circles/${circleId}/murmurs`, {
+  createMurmur: async (requestData: CreateMurmurRequest): Promise<ApiResponse<Murmur>> => {
+    // TODO: 对接真实接口
+    // return request<Murmur>('/murmurs', {
     //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ content })
+    //   body: JSON.stringify(request)
     // });
-    // return response.json();
     
-    // 模拟API调用
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const newMurmur: Murmur = {
-          id: Date.now().toString(),
-          circle_id: circleId,
-          content,
-          created_at: Math.floor(Date.now() / 1000),
-          author: '0xcurrent...user',
-          likes: 0,
-          dislikes: 0
-        };
-        
-        resolve({
-          success: true,
-          data: newMurmur
-        });
-      }, 1000);
-    });
-  }
-}
+    // 临时使用模拟数据 - 这里应该创建新的吐槽
+    return {
+      success: true,
+      data: {
+        id: Date.now().toString(),
+        circleId: requestData.circleId,
+        authorId: '1', // 临时使用固定用户ID
+        author: {
+          id: '1',
+          address: '0x1234567890abcdef',
+          nickname: '当前用户'
+        },
+        content: requestData.content,
+        createdAt: new Date().toISOString(),
+        likeCount: 0,
+        dislikeCount: 0,
+        commentCount: 0,
+        userReaction: null,
+        comments: []
+      }
+    };
+  },
 
-// 导出默认实例
-export const apiService = new ApiService();
+  // 获取吐槽详情
+  getMurmurById: async (id: string): Promise<ApiResponse<Murmur>> => {
+    // TODO: 对接真实接口
+    // return request<Murmur>(`/murmurs/${id}`);
+    
+    // 临时使用模拟数据
+    const { getMurmurById } = await import('../data/mockData');
+    const murmur = getMurmurById(id);
+    return {
+      success: true,
+      data: murmur
+    };
+  }
+};
+
+// 评论相关API
+export const commentApi = {
+  // 获取吐槽的评论列表
+  getCommentsByMurmurId: async (murmurId: string): Promise<ApiResponse<Comment[]>> => {
+    // TODO: 对接真实接口
+    // return request<Comment[]>(`/murmurs/${murmurId}/comments`);
+    
+    // 临时使用模拟数据
+    const { getCommentsByMurmurId } = await import('../data/mockData');
+    return {
+      success: true,
+      data: getCommentsByMurmurId(murmurId)
+    };
+  },
+
+  // 发布评论
+  createComment: async (requestData: CreateCommentRequest): Promise<ApiResponse<Comment>> => {
+    // TODO: 对接真实接口
+    // return request<Comment>('/comments', {
+    //   method: 'POST',
+    //   body: JSON.stringify(request)
+    // });
+    
+    // 临时使用模拟数据
+    return {
+      success: true,
+      data: {
+        id: Date.now().toString(),
+        murmurId: requestData.murmurId,
+        authorId: '1', // 临时使用固定用户ID
+        author: {
+          id: '1',
+          address: '0x1234567890abcdef',
+          nickname: '当前用户'
+        },
+        content: requestData.content,
+        createdAt: new Date().toISOString(),
+        likeCount: 0,
+        dislikeCount: 0,
+        userReaction: null
+      }
+    };
+  }
+};
+
+// 互动相关API
+export const reactionApi = {
+  // 点赞/点踩
+  setReaction: async (_requestData: ReactionRequest): Promise<ApiResponse<{ likeCount: number; dislikeCount: number }>> => {
+    // TODO: 对接真实接口
+    // return request<{ likeCount: number; dislikeCount: number }>('/reactions', {
+    //   method: 'POST',
+    //   body: JSON.stringify(request)
+    // });
+    
+    // 临时使用模拟数据
+    // 在实际实现中，这里会根据requestData来更新具体的点赞/点踩数据
+    return {
+      success: true,
+      data: {
+        likeCount: Math.floor(Math.random() * 50),
+        dislikeCount: Math.floor(Math.random() * 10)
+      }
+    };
+  }
+};
+
+// 导出所有API
+export const api = {
+  circle: circleApi,
+  murmur: murmurApi,
+  comment: commentApi,
+  reaction: reactionApi
+};

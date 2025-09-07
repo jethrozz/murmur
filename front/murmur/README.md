@@ -1,203 +1,115 @@
-# Murmur 前端应用
+# 吐槽圈前端应用
 
-基于 Next.js 和 Sui SDK 的匿名吐槽墙前端应用。
+这是一个基于 React + Vite + Radix UI + Sui 区块链的吐槽圈产品前端应用。
 
 ## 功能特性
 
+- 🏠 **首页**: 浏览已加入的圈子，搜索和加入新圈子
+- 💬 **圈子详情**: 查看圈子内的吐槽动态，发布新吐槽
+- 👍 **互动功能**: 对吐槽和评论进行点赞/点踩
+- 💭 **评论系统**: 对吐槽进行评论和回复
 - 🔗 **钱包连接**: 支持 Sui 钱包连接
-- 🏘️ **圈子管理**: 查看已加入的圈子，搜索和创建新圈子
-- 💬 **匿名吐槽**: 在圈子中发布和查看吐槽
-- 🎫 **NFT 权限**: 通过 NFT 门票控制圈子访问权限
-- 📱 **响应式设计**: 支持桌面端和移动端
 
 ## 技术栈
 
-- **框架**: Next.js 15 (App Router)
-- **语言**: TypeScript
-- **样式**: Tailwind CSS
-- **区块链**: Sui SDK (@mysten/sui, @mysten/dapp-kit)
-- **图标**: Lucide React
-- **状态管理**: React Hooks
+- **前端框架**: React 18 + TypeScript
+- **构建工具**: Vite
+- **UI组件库**: Radix UI Themes
+- **区块链**: Sui (使用 @mysten/dapp-kit)
+- **状态管理**: React Query
+- **样式**: CSS-in-JS (Radix UI)
 
 ## 项目结构
 
 ```
 src/
-├── app/                    # Next.js App Router 页面
-│   ├── circles/           # 圈子相关页面
-│   │   ├── page.tsx      # 圈子列表页面
-│   │   └── [id]/         # 圈子详情页面
-│   ├── layout.tsx        # 根布局
-│   └── page.tsx          # 首页
-├── components/            # React 组件
-│   ├── layout/           # 布局组件
-│   │   ├── Layout.tsx    # 主布局
-│   │   └── Navbar.tsx    # 导航栏
-│   ├── providers/        # 上下文提供者
-│   │   └── WalletProvider.tsx  # 钱包提供者
-│   └── ui/               # UI 组件
-│       ├── Button.tsx    # 按钮组件
-│       ├── Card.tsx      # 卡片组件
-│       ├── Input.tsx     # 输入框组件
-│       ├── Modal.tsx     # 模态框组件
-│       └── Textarea.tsx  # 文本域组件
-└── services/             # 服务层
-    └── api.ts           # API 服务（模拟数据）
+├── components/          # React组件
+│   ├── HomePage.tsx    # 首页组件
+│   ├── CircleDetailPage.tsx  # 圈子详情页
+│   ├── MurmurCard.tsx  # 吐槽卡片组件
+│   └── CommentList.tsx # 评论列表组件
+├── types/              # TypeScript类型定义
+│   └── index.ts
+├── data/               # 模拟数据
+│   └── mockData.ts
+├── services/           # API服务层
+│   └── api.ts
+├── App.tsx            # 主应用组件
+├── main.tsx           # 应用入口
+└── networkConfig.ts   # 网络配置
 ```
 
-## 安装和运行
-
-### 环境要求
-
-- Node.js 18+ 
-- npm 或 yarn
+## 开发指南
 
 ### 安装依赖
 
 ```bash
-npm install
+pnpm install
 ```
 
-### 开发模式
+### 启动开发服务器
 
 ```bash
-npm run dev
+pnpm dev
 ```
-
-应用将在 http://localhost:3000 启动
 
 ### 构建生产版本
 
 ```bash
-npm run build
-npm start
+pnpm build
 ```
 
-## 主要功能说明
+### 预览生产版本
 
-### 1. 钱包连接
-
-- 使用 Sui 官方钱包连接
-- 支持自动连接和手动连接
-- 显示钱包地址和断开连接功能
-
-### 2. 圈子管理
-
-#### 我的圈子页面 (`/circles`)
-- 显示用户已加入的圈子
-- 随机进入功能（搜索框）
-- 点击圈子弹出确认对话框
-
-#### 圈子详情页面 (`/circles/[id]`)
-- 显示圈子信息和统计
-- 发布吐槽功能
-- 查看吐槽列表
-- 点赞/点踩功能
-
-### 3. 搜索和创建
-
-- 搜索现有圈子
-- 如果没有找到匹配的圈子，提供创建选项
-- 后端自动匹配和创建逻辑
-
-## API 接口设计
-
-项目使用模拟数据，但预留了完整的 API 接口设计：
-
-### 圈子相关接口
-
-```typescript
-// 获取用户已加入的圈子
-GET /api/user/circles
-
-// 搜索圈子
-GET /api/circles/search?name={keyword}
-
-// 创建圈子
-POST /api/circles
-{
-  "name": "圈子名称",
-  "description": "圈子描述"
-}
-
-// 获取圈子详情
-GET /api/circles/{id}
-
-// 获取圈子吐槽列表
-GET /api/circles/{id}/murmurs?limit=20&offset=0
+```bash
+pnpm preview
 ```
 
-### 吐槽相关接口
+## API接口对接
 
-```typescript
-// 发布吐槽
-POST /api/circles/{id}/murmurs
-{
-  "content": "吐槽内容"
-}
+项目已经预留了完整的API接口对接位置，位于 `src/services/api.ts` 文件中。当需要对接真实后端接口时，只需要：
 
-// 点赞/点踩
-POST /api/murmurs/{id}/like
-POST /api/murmurs/{id}/dislike
+1. 取消注释相关的 `request` 函数调用
+2. 配置正确的 `API_BASE_URL`
+3. 根据后端接口调整请求参数和响应处理
+
+### 主要API接口
+
+- `circleApi.getJoinedCircles()` - 获取已加入的圈子
+- `circleApi.searchCircles()` - 搜索圈子
+- `circleApi.joinCircle()` - 加入圈子
+- `murmurApi.getMurmursByCircleId()` - 获取圈子吐槽列表
+- `murmurApi.createMurmur()` - 发布吐槽
+- `commentApi.createComment()` - 发布评论
+- `reactionApi.setReaction()` - 点赞/点踩
+
+## 环境变量
+
+创建 `.env` 文件并配置：
+
+```env
+VITE_API_URL=http://localhost:8080/api
 ```
 
-## 智能合约集成
+## 模拟数据
 
-项目设计为与 Sui 智能合约集成：
+项目使用模拟数据进行开发，包含：
+- 5个示例圈子
+- 多个吐槽和评论
+- 用户数据
 
-### 主要合约功能
-
-1. **圈子创建**: `create_circle()`
-2. **门票发放**: `grant_circle_ticket()`
-3. **发布吐槽**: `publish_murmur()`
-4. **权限验证**: `has_circle_access()`
-
-### 合约地址配置
-
-在 `src/services/api.ts` 中配置合约地址：
-
-```typescript
-const CONTRACT_ADDRESS = '0x...'; // 部署后的合约地址
-const PACKAGE_ID = '0x...';       // 合约包 ID
-```
+模拟数据位于 `src/data/mockData.ts` 文件中，可以根据需要修改。
 
 ## 部署
 
-### Vercel 部署
-
-1. 连接 GitHub 仓库到 Vercel
-2. 配置环境变量（如需要）
-3. 自动部署
-
-### 其他平台
-
-```bash
-npm run build
-npm start
-```
-
-## 开发说明
-
-### 添加新功能
-
-1. 在 `src/services/api.ts` 中添加新的 API 方法
-2. 创建相应的 React 组件
-3. 更新页面路由
-
-### 样式定制
-
-项目使用 Tailwind CSS，可以通过修改 `tailwind.config.js` 进行定制。
-
-### 钱包集成
-
-如需支持更多钱包，可以在 `src/components/providers/WalletProvider.tsx` 中配置。
+项目构建后可以部署到任何静态文件服务器，如：
+- Vercel
+- Netlify
+- GitHub Pages
+- 自建服务器
 
 ## 注意事项
 
-1. 当前使用模拟数据，实际部署时需要连接真实的后端 API
-2. 智能合约功能需要根据实际部署的合约地址进行配置
-3. 钱包连接功能需要在实际的 Sui 网络环境中测试
-
-## 许可证
-
-MIT License
+1. 确保钱包已连接到 Sui 网络
+2. 当前使用模拟数据，生产环境需要对接真实API
+3. 所有用户交互都会显示在控制台中，便于调试
