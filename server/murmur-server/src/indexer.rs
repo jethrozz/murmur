@@ -1,11 +1,10 @@
-use sui_sdk::SuiClient;
-use sui_types::base_types::{ObjectID, TransactionDigest};
-use sui_types::event::Event;
-use sui_types::event::EventEnvelope;
-use sui_types::query::EventFilter;
+use sui_sdk::{SuiClient, SuiClientBuilder};
+use sui_types::base_types::ObjectID;
+use sui_json_rpc_types::SuiEvent;
+use sui_json_rpc_types::EventFilter;
 use crate::database::{Database, Circle};
 use anyhow::Result;
-use tracing::{info, error, warn};
+use tracing::{info, error};
 use std::sync::Arc;
 use tokio::time::{sleep, Duration};
 
@@ -24,7 +23,9 @@ impl Indexer {
         package_id: &str,
         database: Arc<Database>,
     ) -> Result<Self> {
-        let sui_client = SuiClient::new(sui_rpc_url)?;
+        let sui_client = SuiClientBuilder::default()
+            .build(sui_rpc_url)
+            .await?;
         let package_id = ObjectID::from_hex_literal(package_id)?;
 
         Ok(Indexer {
@@ -85,17 +86,18 @@ impl Indexer {
     }
 
     /// 获取指定范围内的事件
-    async fn get_events(&self, start: u64, end: u64) -> Result<Vec<EventEnvelope>> {
+    async fn get_events(&self, start: u64, end: u64) -> Result<Vec<SuiEvent>> {
         let mut all_events = Vec::new();
 
-        for checkpoint in start..=end {
+        for _checkpoint in start..=end {
+            // 使用 query_events 方法来查询事件
             let checkpoint_events = self.sui_client
-                .read_api()
-                .get_events(
-                    EventFilter::Package(self.package_id),
-                    Some(checkpoint),
-                    Some(checkpoint),
-                    1000, // 每页最多1000个事件
+                .event_api()
+                .query_events(
+                    EventFilter::All([]), // 暂时使用 All 过滤器
+                    None, // cursor
+                    Some(1000), // limit
+                    false, // descending_order
                 )
                 .await?;
 
@@ -106,41 +108,27 @@ impl Indexer {
     }
 
     /// 处理单个事件
-    async fn process_single_event(&self, event_envelope: EventEnvelope) -> Result<()> {
-        let event = &event_envelope.event;
-
-        match event {
-            Event::MoveEvent(move_event) => {
-                // 检查是否是CircleCreatedEvent
-                if self.is_circle_created_event(move_event) {
-                    self.handle_circle_created_event(event_envelope).await?;
-                }
-            }
-            _ => {
-                // 忽略其他类型的事件
-            }
+    async fn process_single_event(&self, sui_event: SuiEvent) -> Result<()> {
+        // 检查是否是CircleCreatedEvent
+        if self.is_circle_created_event(&sui_event) {
+            self.handle_circle_created_event(sui_event).await?;
         }
 
         Ok(())
     }
 
     /// 检查是否是CircleCreatedEvent
-    fn is_circle_created_event(&self, move_event: &sui_types::event::MoveEvent) -> bool {
+    fn is_circle_created_event(&self, sui_event: &SuiEvent) -> bool {
         // 检查事件类型是否匹配CircleCreatedEvent
         // 格式: package_id::module::struct_name
         let expected_type = format!("{}::murmur::CircleCreatedEvent", self.package_id);
-        move_event.type_.to_string() == expected_type
+        sui_event.type_.to_string() == expected_type
     }
 
     /// 处理CircleCreatedEvent事件
-    async fn handle_circle_created_event(&self, event_envelope: EventEnvelope) -> Result<()> {
-        let move_event = match &event_envelope.event {
-            Event::MoveEvent(me) => me,
-            _ => return Ok(()),
-        };
-
+    async fn handle_circle_created_event(&self, sui_event: SuiEvent) -> Result<()> {
         // 解析事件数据
-        let fields = &move_event.fields;
+        let fields = &sui_event.parsed_json;
         
         // 从事件字段中提取数据
         let circle_id = fields.get("circle_id")
@@ -166,8 +154,8 @@ impl Indexer {
             creator: creator.to_string(),
             created_at: chrono::DateTime::from_timestamp(created_at as i64, 0)
                 .unwrap_or_else(|| chrono::Utc::now()),
-            block_height: event_envelope.timestamp_ms / 1000, // 使用时间戳作为块高度
-            transaction_digest: event_envelope.tx_digest.to_string(),
+            block_height: sui_event.timestamp_ms.unwrap_or(0) / 1000, // 使用时间戳作为块高度
+            transaction_digest: sui_event.id.tx_digest.to_string(),
         };
 
         // 保存到数据库

@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useRef, useCallback } from 'react';
 import { useGesture } from '@use-gesture/react';
+import { Circle } from '../types';
 
 type ImageItem = string | { src: string; alt?: string, title?: string };
 
 type DomeGalleryProps = {
   images?: ImageItem[];
+  circles?: Circle[];
+  onCircleSelect?: (circle: Circle) => void;
   fit?: number;
   fitBasis?: 'auto' | 'min' | 'max' | 'width' | 'height';
   minRadius?: number;
@@ -31,6 +34,7 @@ type ItemDef = {
   sizeX: number;
   sizeY: number;
   title: string;
+  circle?: Circle;
 };
 
 const DEFAULT_IMAGES: ImageItem[] = [
@@ -90,7 +94,7 @@ const getDataNumber = (el: HTMLElement, name: string, fallback: number) => {
   return Number.isFinite(n) ? n : fallback;
 };
 
-function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
+function buildItems(pool: ImageItem[], circles: Circle[] | undefined, seg: number): ItemDef[] {
   const xCols = Array.from({ length: seg }, (_, i) => -37 + i * 2);
   const evenYs = [-4, -2, 0, 2, 4];
   const oddYs = [-3, -1, 1, 3, 5];
@@ -101,6 +105,24 @@ function buildItems(pool: ImageItem[], seg: number): ItemDef[] {
   });
 
   const totalSlots = coords.length;
+  
+  // 如果提供了圈子数据，优先使用圈子数据
+  if (circles && circles.length > 0) {
+    const usedCircles = Array.from({ length: totalSlots }, (_, i) => circles[i % circles.length]);
+    
+    return coords.map((c, i) => {
+      const circle = usedCircles[i];
+      return {
+        ...c,
+        src: '', // 圈子不需要图片
+        alt: circle.name,
+        title: circle.name,
+        circle: circle
+      };
+    });
+  }
+  
+  // 否则使用图片数据
   if (pool.length === 0) {
     return coords.map(c => ({ ...c, src: '', alt: '', title: '' }));
   }
@@ -149,6 +171,8 @@ function computeItemBaseRotation(offsetX: number, offsetY: number, sizeX: number
 
 export default function DomeGallery({
   images = DEFAULT_IMAGES,
+  circles,
+  onCircleSelect,
   fit = 0.7,
   fitBasis = 'auto',
   minRadius = 850,
@@ -206,7 +230,7 @@ export default function DomeGallery({
     document.body.classList.remove('dg-scroll-lock');
   }, []);
 
-  const items = useMemo(() => buildItems(images, segments), [images, segments]);
+  const items = useMemo(() => buildItems(images, circles, segments), [images, circles, segments]);
 
   const applyTransform = (xDeg: number, yDeg: number) => {
     const el = sphereRef.current;
@@ -422,6 +446,16 @@ export default function DomeGallery({
           cancelTapRef.current = !isTap;
 
           if (isTap && tapTargetRef.current && !focusedElRef.current) {
+            // 如果是圈子数据，直接调用onCircleSelect
+            const parent = tapTargetRef.current.parentElement;
+            if (parent) {
+              const itemIndex = parseInt(parent.dataset.itemIndex || '0');
+              const item = items[itemIndex];
+              if (item?.circle && onCircleSelect) {
+                onCircleSelect(item.circle);
+                return;
+              }
+            }
             openItemFromElement(tapTargetRef.current);
           }
           tapTargetRef.current = null;
@@ -747,7 +781,7 @@ export default function DomeGallery({
     .item__image {
       position: absolute;
       inset: 10px;
-      background-color: #65549c;
+      background-color: #4C1D95;
       border-radius: var(--tile-radius, 12px);
       overflow: hidden;
       cursor: pointer;
@@ -792,54 +826,87 @@ export default function DomeGallery({
         >
           <div className="stage">
             <div ref={sphereRef} className="sphere">
-              {items.map((it, i) => (
-                <div
-                  key={`${it.x},${it.y},${i}`}
-                  className="sphere-item absolute m-auto"
-                  data-src={it.src}
-                  data-alt={it.alt}
-                  data-offset-x={it.x}
-                  data-offset-y={it.y}
-                  data-size-x={it.sizeX}
-                  data-size-y={it.sizeY}
-                  style={
-                    {
-                      ['--offset-x' as any]: it.x,
-                      ['--offset-y' as any]: it.y,
-                      ['--item-size-x' as any]: it.sizeX,
-                      ['--item-size-y' as any]: it.sizeY,
-                      top: '-999px',
-                      bottom: '-999px',
-                      left: '-999px',
-                      right: '-999px'
-                    } as React.CSSProperties
-                  }
-                >
+              {items.map((it, i) => {
+                const isCircle = !!it.circle;
+                const colors = ['#1E1B4B', '#312E81', '#3730A3', '#4338CA', '#4C1D95', '#581C87', '#6B21A8', '#7C3AED', '#8B5CF6', '#9333EA'];
+                const colorIndex = i % colors.length;
+                const bgColor = isCircle ? colors[colorIndex] : '#4C1D95';
+                
+                return (
                   <div
-                    className="item__image absolute block overflow-hidden cursor-pointer bg-gray-200 transition-transform duration-300"
-                    role="button"
-                    tabIndex={0}
-                    aria-label={it.alt || 'Open image'}
-                    onClick={e => {
-                      if (performance.now() - lastDragEndAt.current < 80) return;
-                      openItemFromElement(e.currentTarget as HTMLElement);
-                    }}
-                    onTouchEnd={e => {
-                      if (performance.now() - lastDragEndAt.current < 80) return;
-                      openItemFromElement(e.currentTarget);
-                    }}
-                    style={{
-                      inset: '10px',
-                      borderRadius: `var(--tile-radius, ${imageBorderRadius})`,
-                      backfaceVisibility: 'hidden'
-                    }}
+                    key={`${it.x},${it.y},${i}`}
+                    className="sphere-item absolute m-auto"
+                    data-src={it.src}
+                    data-alt={it.alt}
+                    data-offset-x={it.x}
+                    data-offset-y={it.y}
+                    data-size-x={it.sizeX}
+                    data-size-y={it.sizeY}
+                    data-item-index={i}
+                    style={
+                      {
+                        ['--offset-x' as any]: it.x,
+                        ['--offset-y' as any]: it.y,
+                        ['--item-size-x' as any]: it.sizeX,
+                        ['--item-size-y' as any]: it.sizeY,
+                        top: '-999px',
+                        bottom: '-999px',
+                        left: '-999px',
+                        right: '-999px'
+                      } as React.CSSProperties
+                    }
                   >
-                    <h2>{it.title}</h2>
-
+                    <div
+                      className="item__image absolute block overflow-hidden cursor-pointer transition-transform duration-300"
+                      role="button"
+                      tabIndex={0}
+                      aria-label={it.alt || (isCircle ? 'Open circle' : 'Open image')}
+                      onClick={e => {
+                        if (performance.now() - lastDragEndAt.current < 80) return;
+                        if (isCircle && onCircleSelect) {
+                          onCircleSelect(it.circle!);
+                        } else {
+                          openItemFromElement(e.currentTarget as HTMLElement);
+                        }
+                      }}
+                      onTouchEnd={e => {
+                        if (performance.now() - lastDragEndAt.current < 80) return;
+                        if (isCircle && onCircleSelect) {
+                          onCircleSelect(it.circle!);
+                        } else {
+                          openItemFromElement(e.currentTarget);
+                        }
+                      }}
+                      style={{
+                        inset: '10px',
+                        borderRadius: `var(--tile-radius, ${imageBorderRadius})`,
+                        backfaceVisibility: 'hidden',
+                        backgroundColor: bgColor,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '1rem',
+                        textAlign: 'center'
+                      }}
+                    >
+                      {isCircle ? (
+                        <h2 style={{ 
+                          color: 'white', 
+                          fontSize: '1.2rem', 
+                          fontWeight: 'bold',
+                          margin: '0',
+                          textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                        }}>
+                          {it.title}
+                        </h2>
+                      ) : (
+                        <h2 style={{ color: 'white', fontSize: '1rem' }}>{it.title}</h2>
+                      )}
+                    </div>
                   </div>
-                  
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

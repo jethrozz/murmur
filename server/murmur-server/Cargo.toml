@@ -5,8 +5,9 @@ edition = "2021"
 
 [dependencies]
 # Sui SDK
-sui-sdk = "1.0"
-sui-types = "1.0"
+sui-sdk = { git = "https://github.com/mystenlabs/sui", package = "sui-sdk" }
+sui-types = { git = "https://github.com/mystenlabs/sui", package = "sui-types" }
+sui-json-rpc-types = { git = "https://github.com/mystenlabs/sui", package = "sui-json-rpc-types" }
 
 # Web框架
 axum = "0.7"
